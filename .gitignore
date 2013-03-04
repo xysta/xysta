@@ -1,5 +1,9 @@
 .myeclipse
 
+.idea
+
+xysta.iml
+
 .settings
 
 .classpath
@@ -7,3 +11,4 @@
 .mymetadata
 
 .project
+
