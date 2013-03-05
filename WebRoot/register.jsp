@@ -147,7 +147,7 @@
 									<tr>
 										<td><font style="color: red">*</font><b>密码：</b></td>
 										<td><input type="text" class="product_thumb"
-											name="password" value="请输入不少于6位的密码" id="password"><input
+											name="password" placeholder="请输入不少于6位的密码" id="password"><input
 											name="password" type="password" class="product_thumb"
 											id="real_password">
 										</td>

@@ -35,7 +35,7 @@ public class Config extends JFinalConfig {
 
 	@Override
 	public void configPlugin(Plugins me) {
-		C3p0Plugin cp = new C3p0Plugin("jdbc:mysql:///xysta?useUnicode=true&characterEncoding=utf-8", "root", "123456");
+		C3p0Plugin cp = new C3p0Plugin("jdbc:mysql:///xysta?useUnicode=true&characterEncoding=utf-8", "root", "password");
 		me.add(cp);
 		ActiveRecordPlugin arp = new ActiveRecordPlugin(cp);
 		me.add(arp);
