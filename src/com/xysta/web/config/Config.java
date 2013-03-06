@@ -13,6 +13,7 @@ import com.xysta.web.controller.CommentController;
 import com.xysta.web.controller.MainController;
 import com.xysta.web.controller.MiniBlogController;
 import com.xysta.web.controller.UserController;
+import com.xysta.web.interceptor.GlobalIntercepter;
 import com.xysta.web.model.Comment;
 import com.xysta.web.model.MiniBlog;
 import com.xysta.web.model.User;
@@ -47,7 +48,7 @@ public class Config extends JFinalConfig {
 
 	@Override
 	public void configInterceptor(Interceptors me) {
-		
+        me.add(new GlobalIntercepter());
 	}
 
 	@Override

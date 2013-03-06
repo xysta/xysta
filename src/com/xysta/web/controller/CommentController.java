@@ -21,7 +21,7 @@ public class CommentController extends Controller {
 		ct.set("blog_id", getParaToInt("blog_id"))
 				.set("comment", getPara("comment"))
 			//	.set("reviewer", getPara("reviewer"))
-				.set("reviewer", "����sb��")
+				.set("reviewer", "����sb��")
 				.set("review_time", DateTimeUtil.getTimeString());
 		ct.save();
 		renderJson(responseData.set(true).set(ct));
@@ -37,7 +37,7 @@ public class CommentController extends Controller {
 		renderJson(responseData.set(true).set(nickname));
 	}
 	
-	@ActionKey("findCommentByBlogid")
+	@ActionKey("findCommentByBlogid") //url太长了，可以直接用find，然后根据参数查找
 	public void findCommentByBlogid() {
 		List list =Comment.dao.find(
 				"select * from xysta_comment where blog_id=?",
