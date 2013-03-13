@@ -120,11 +120,11 @@
 </head>
 <body>
 	<img src="img/logo.png" id="home"
-		style="width:350;margin-left: 300;margin-top: -20;""></img>
+		style="width:350;margin-left: 300;margin-top: -20;"></img>
 	<table style="margin-left: 450;" cellspacing="-1">
 		<tr>
 			<td>
-				<table style="margin-top:  ">
+				<table style="margin-top:  0">
 					<tr>
 						<td><table style="width:308">
 								<tr>
