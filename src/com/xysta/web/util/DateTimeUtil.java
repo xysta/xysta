@@ -1,6 +1,4 @@
 package com.xysta.web.util;
-
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
