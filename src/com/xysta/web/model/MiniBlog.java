@@ -9,7 +9,7 @@ public class MiniBlog extends Model<MiniBlog> {
 	 */
 
 	private static final long serialVersionUID = 2757228935607940213L;
-	public static final MiniBlog dao = new MiniBlog();
+	public static MiniBlog dao = new MiniBlog();
 	
 	public static Page initial(int pageSize){
 		Page firstPage = dao.paginate(1, pageSize, "select *", "from xysta_blog order by id desc");
@@ -17,5 +17,9 @@ public class MiniBlog extends Model<MiniBlog> {
 		//List list = firstPage.getList();
 		return firstPage;
 		//return new Gson().toJson(firstPage);
+	}
+	
+	public static int getCount(String nickname){
+		return dao.find("select * from xysta_blog where author=?", nickname).size();	
 	}
 }

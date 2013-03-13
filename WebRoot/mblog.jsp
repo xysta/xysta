@@ -1,33 +1,36 @@
-<%@page import="com.xysta.web.model.User"%>
-<%@page import="com.jfinal.plugin.activerecord.Page"%>
 <%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
-<%@ page import="com.xysta.web.model.MiniBlog"%>
+<%@ page import="com.xysta.web.model.*"%>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://"
-	+ request.getServerName() + ":" + request.getServerPort()
-	+ path + "/";
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
 %>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
 <base href="<%=basePath%>">
+
 <title>@me微博</title>
+
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-<link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.css"
-	type="text/css"></link>
-<link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.min.css"
-	type="text/css"></link>
 <link rel="stylesheet" href="bootstrap/css/bootstrap.css"
 	type="text/css"></link>
 <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"
+	type="text/css"></link>
+<link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.css"
+	type="text/css"></link>
+<link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.min.css"
 	type="text/css"></link>
 
 <script type="text/javascript" src="jquery/jquery-1.7.2.js"></script>
 <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
 <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap-dropdown.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap-scrollspy.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap-tab.js"></script>
 
 <style type="text/css">
 textarea {
@@ -55,11 +58,61 @@ textarea {
 
 body {
 	background-color: #6BC9EB;
+	color: #333;
+}
+
+.td {
+	border-right-color: #C9F1FF;
+	border-right-style: solid;
+	background-color: #B6DFEF;
+}
+
+.hoveron {
+	border-right-color: #C9F1FF;
+	border-right-style: solid;
+	background-color: #A8D2E4;;
+}
+
+.td2 {
+	background-color: #B6DFEF;
+}
+
+.hoveron2 {
+	background-color: #A8D2E4;;
+}
+
+.tl_imgGroup {
+	overflow: hidden;
+	padding-top: 2px;
+}
+
+.tl_imgGroup_item {
+	float: left;
+	width: 90px;
+	height: 90px;
+	overflow: hidden;
 }
 </style>
 
 <script type="text/javascript">
 	$(function() {
+
+		function toolbar(el) {
+			el = typeof el == 'string' ? document.getElementById(el) : el;
+			var elTop = el.offsetTop;
+			var sTop = 0;
+			window.onscroll = function() {
+				sTop = document.body.scrollTop
+						|| document.documentElement.scrollTop;
+				if (sTop > elTop) {
+					el.style.top = "0";
+					el.style.position = "fixed";
+				} else {
+					el.style.top = elTop + 'px';
+					el.style.position = "absolute";
+				}
+			}
+		}
 
 		$("#navbar").ready(function(e) {
 			// toolbar("navbar");
@@ -93,6 +146,25 @@ body {
 		var pageSize = $("#pageSize").val();
 		var show_size = 7;
 
+		function showUserRelationMenu() {
+			$.ajax({
+				type : "post",
+				url : "getCurUserRelaData",
+				cache : false,
+				dataType : "json",
+				success : function(data) {
+					var res = data.message;
+					
+					$("#mybroadcast").text(res.mybroadcast);
+					$("#ihavelistened").text(res.ihavelistened);
+					$("#mylistener").text(res.mylistener);
+				
+				}
+			});
+		}
+		
+		showUserRelationMenu();
+		
 		//刷微博
 		function broadcast_new_blog(content) {
 			$.ajax({
@@ -109,11 +181,12 @@ body {
 					if (res) {
 						//console.log(data.message.email);
 						//window.location="mblog.jsp";
-						console.log("终于刷了一条");
+					//	console.log("终于刷了一条");
 					} else {
 						//console.log(data.message);
-						console.log("刷不出来啊啊，亲");
+					//	console.log("刷不出来啊啊，亲");
 					}
+					showUserRelationMenu();
 				}
 			});
 		}
@@ -129,7 +202,32 @@ body {
 				$("#new_blog").val("");
 			}, 1500);
 		});
-		
+
+		//显示图片
+		function showPicIntheBlog(imgpath) {
+			var div_html = "";
+			for ( var i = 0; i < imgpath.length; i++) {
+				div_html += "<div class='tl_imgGroup_item'>"
+						+ "<img class='' width='90' src='"+imgpath[i]+"' style='display: inline;'></div>";
+			}
+			return div_html;
+		}
+
+		function showPic() {
+			for ( var i = 0; i < pageSize; i++) {
+				var imgpath = $("#imgpath" + i).text();
+				if (imgpath != "null") {
+					//var te = eval(imgpath);
+					imgpath = $.parseJSON(imgpath);
+					console.log(imgpath);
+					$("#showpic" + i).css("display", "block");
+					$("#showpic" + i).find(".tl_imgGroup").html("");
+					$("#showpic" + i).find(".tl_imgGroup").html(
+							showPicIntheBlog(imgpath));
+				}
+			}
+		}
+		showPic();
 		//生成分页工具条的html代码
 		function creat_paginate_bar(total_page) {
 			var ul_html = "<ul><li id='previous_li' class='disabled'>"
@@ -172,6 +270,24 @@ body {
 						$("#show_time" + i).text(blog_temp.createtime);
 						$("#show_content" + i).text(blog_temp.content);
 						$("#show_author" + i).text(blog_temp.author);
+						$("#blog_id" + i).val(blog_temp.id);
+						$("#blog_review_div" + i).hide();
+
+						var imgpath = blog_temp.imagepath;
+						$("#imgpath" + i).text(imgpath);
+						//	console.log($("#imgpath" + i).text());
+						console.log(imgpath);
+						$("#showpic" + i).find(".tl_imgGroup").html("");
+
+						if (imgpath != null) {
+							//var te = eval(imgpath);
+							imgpath = $.parseJSON(imgpath);
+							console.log(imgpath);
+							$("#showpic" + i).css("display", "block");
+							$("#showpic" + i).find(".tl_imgGroup").html(
+									showPicIntheBlog(imgpath));
+						}
+
 					}
 					if (current_page == totalPage
 							&& blog_list.length < pageSize) {
@@ -198,7 +314,7 @@ body {
 		}
 
 		//先数据库发送请求，显示“评论”
-		function showComment(blog_id) {
+		function showComment(blog_id, current_blog) {
 			$.ajax({
 				type : "post",
 				//	url : "http://192.168.0.103:8080/xysta/findCommentByBlogid",
@@ -210,16 +326,19 @@ body {
 				dataType : "json",
 				success : function(data) {
 					var res = data.message;
-					if (res != null) {
+					var comment_html = "";
+					if (res.length != 0) {
 						for ( var i = 0; i < res.length; i++) {
-							var comment = res[i];
-							$("#show_time" + i).text(blog_temp.createtime);
-							$("#show_content" + i).text(blog_temp.content);
-							$("#show_author" + i).text(blog_temp.author);
+							var temp_comment = res[i];
+							comment_html += "<p><span style='color:red'>(评论人)"
+									+ temp_comment.reviewer
+									+ "：</span><span>评论内容："
+									+ temp_comment.comment + "</span></p>";
 						}
+						$("#show_comment" + current_blog).html(comment_html);
 					} else {
 						//console.log(data.message);
-						console.log("刷不出来啊啊，亲");
+						$("#show_comment" + current_blog).html("暂无相关评论！")
 					}
 				}
 			});
@@ -230,8 +349,8 @@ body {
 		function commentSave(blog_id, comment) {
 			$.ajax({
 				type : "post",
-				url : "http://192.168.0.103:8080/xysta/commentSave",
-				//url : "commentSave",
+				//url : "http://192.168.0.103:8080/xysta/commentSave",
+				url : "commentSave",
 				data : {
 					blog_id : blog_id,
 					comment : comment
@@ -239,18 +358,18 @@ body {
 				cache : false,
 				dataType : "json",
 				success : function(data) {
-					var res = data.result;
+					var res = data.message;
 					if (res != null) {
-						console.log("评论成功！");
+						//console.log("评论成功！" + res.comment);
 					} else {
 						//console.log(data.message);
-						console.log("评论失败？");
+						//console.log("评论失败？");
 					}
 				}
 			});
 
 		}
-		
+
 		//动态切换的评论div的显示或者隐藏
 		var current_blog = 0;
 		function reviw_function() {
@@ -266,21 +385,35 @@ body {
 					} else {
 						$("#blog_review_div" + current_blog).hide();
 					}
+
+					var blog_id = $("#blog_id" + current_blog).val();
+					showComment(blog_id, current_blog);
+
 				});
-				
-				$("#review_button"+i).click(function(){
+
+				$("#review_button" + i).click(function() {
 					current_blog = parseInt($(this).val());
-					var blog_id = $("#blog_id"+current_blog).val();
-					var comment = $("#comment"+current_blog).val();
+					var blog_id = $("#blog_id" + current_blog).val();
+					var comment = $("#comment" + current_blog).val().trim();
 					//console.log("当前blog: "+current_blog+", blog_id为："+blog_id+",内容为："+comment);
-					commentSave(blog_id, comment);
-				
+					if (comment.length > 0) {
+						//console.log("+"+comment+"+")
+						commentSave(blog_id, comment);
+						showComment(blog_id, current_blog);
+
+					} else {
+						$("#comment" + current_blog).val("评论信息不能我空！");
+					}
+					setTimeout(function() {
+						$("#comment" + current_blog).val("");
+					}, 1500);
+
 				});
 
 			}
 		}
 		reviw_function();
-		
+
 		//分页工具条相关的js代码
 		function paginate_bar_function() {
 			$(".pagination").ready(function(e) {
@@ -407,403 +540,88 @@ body {
 
 		}
 
-		
+	});
 
+	$(function() {
+		$("#td1").hover(function() {
+			$("#td1").addClass("hoveron");
+		}, function() {
+			$("#td1").removeClass('hoveron')
+		});
+
+		$("#td2").hover(function() {
+			$("#td2").addClass("hoveron");
+		}, function() {
+			$("#td2").removeClass('hoveron')
+		});
+
+		$("#td3").hover(function() {
+			$("#td3").addClass("hoveron");
+		}, function() {
+			$("#td3").removeClass('hoveron')
+		});
+
+		$("#td4").hover(function() {
+			$("#td4").addClass("hoveron2");
+		}, function() {
+			$("#td4").removeClass("hoveron2");
+		});
+
+		$(".dropdown-toggle").dropdown();
+		$(".navbar-inner").scrollspy();
+
+		$('#myTab a').click(function(e) {
+			e.preventDefault();
+			$(this).tab('show');
+		});
+
+		$("#set").click(function() {
+			if ($("#user_set").attr("style") == "visibility: hidden") {
+				$("#user_set").attr("style", "visibility: visible");
+			} else {
+				$("#user_set").attr("style", "visibility: hidden");
+			}
+			//$("#user_set").hide();
+		});
 	});
 </script>
 
-
 </head>
-<body>
-	<%
-		/**
-		
-		 User user = (User) session.getAttribute("user");
-		 String nickname = user.get("nickname");
-		 out.print(nickname);
-		 */
-	%>
-	<div id="navbar" class="navbar" style="z-index: 2">
-		<div class="navbar-inner"
-			style="background-image: -webkit-linear-gradient(top, rgb(50, 162, 208), rgb(28, 216, 216)); ">
-			<div class="container" style="width: auto;">
-				<a class="btn btn-navbar" data-toggle="collapse"
-					data-target=".nav-collapse"
-					style="color: rgb(51, 51, 51); background-image: -webkit-linear-gradient(top, rgb(255, 255, 255), rgb(230, 230, 230)); background-color: rgb(230, 230, 230); ">
-					<span class="icon-bar"></span> <span class="icon-bar"></span> <span
-					class="icon-bar"></span> </a> <a class="brand" href="#"
-					style="color: rgb(247, 242, 242); padding: 8px 20px 12px; font-size: 20px; ">@me
-					微薄</a>
-				<div class="nav-collapse">
-					<ul class="nav">
-						<li><a href="#"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Home</a>
-						</li>
-						<li class="divider-vertical"
-							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px; "></li>
-						<li class="active"><a href="#"
-							style="color: rgb(247, 239, 239); padding: 10px 10px 11px; font-size: 14px; ">Miracle</a>
-						</li>
-						<li class="divider-vertical"
-							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px; "></li>
-						<li><a href="#"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Link</a>
-						</li>
-						<li><a href="#"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Link</a>
-						</li>
-						<li class="dropdown"><a href="#" class="dropdown-toggle"
-							data-toggle="dropdown"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Dropdown
-								<b class="caret"></b> </a>
-							<ul class="dropdown-menu">
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Action</a>
-								</li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Another
-										action</a></li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Something
-										else here</a></li>
-								<li class="divider"></li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Separated
-										link</a></li>
-							</ul>
-						</li>
-					</ul>
-					<ul class="nav pull-right">
-						<li><a href="#"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Link</a>
-						</li>
-						<li class="divider-vertical"
-							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px; "></li>
-						<li class="dropdown"><a href="#" class="dropdown-toggle"
-							data-toggle="dropdown"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Dropdown
-								<b class="caret"></b> </a>
-							<ul class="dropdown-menu">
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Action</a>
-								</li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Another
-										action</a></li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Something
-										else here</a></li>
-								<li class="divider"></li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Separated
-										link</a></li>
-							</ul>
-						</li>
-					</ul>
-				</div>
-				<!-- /.nav-collapse -->
-			</div>
-		</div>
-		<!-- /navbar-inner -->
-	</div>
 
+<body>
+	<div style="width: 100%">
+		<jsp:include page="header.jsp" />
+	</div>
 	<div id="Div1">
 		<table width="100%" border="0" cellspacing="2" cellpadding="2">
 			<tr>
 				<td colspan="4">&nbsp;</td>
 				<td width="2%">&nbsp;</td>
-				<td width="29%" bgcolor="#C9F1FF">&nbsp;</td>
+				<td width="34%" bgcolor="#C9F1FF">&nbsp;</td>
 			</tr>
 			<tr>
 				<td width="2%" rowspan="4">&nbsp;</td>
-				<td colspan="3"><span>来，晒晒你的心情......</span>
-					<div id="bianji">
-						<span> <textarea id="new_blog" rows="7"></textarea> </span><span>
-						</span> <span>
-							<table>
-								<tr>
-									<td><span><img name="t1" src="" width="25"
-											height="25" alt="tupian1" /><a href="#">表情</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t1" /><a href="#">图片</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t2" /><a href="#">朋友</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t3" /><a href="#">ddd</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t4" /><a href="#">eee</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t5" /><a href="#">fff</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t6" /><a href="#">ggg</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t7" /><a href="#">hhh</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t8" /><a href="#">iii</a> </span></td>
-									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t9" /><a href="#">jjj</a> </span></td>
-								</tr>
-							</table> </span>
-					</div></td>
-				<td>&nbsp;</td>
-				<td align="center" valign="top"
-					style="background-color:#C9F1FF; border-color:#C9F1FF"><table
-						width="100%" border="0" cellspacing="2" cellpadding="2"
-						style=" border-color:#C9F1FF; background-color:#C9F1FF">
-						<tr>
-							<td width="31%" height="105" align="center"><img
-								src="img/touxiang.png" alt="aa" /></td>
-							<td width="69%">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="2"><table width="100%" id="user_bolg_data">
-									<tr bgcolor="#B6DFEF">
-										<td width="25%" align="center" valign="middle"
-											bgcolor="#B6DFEF"
-											style="border-right-color:#C9F1FF; border-right-style: solid;"><p>xxx</p>
-											<p>我的广播</p></td>
-										<td width="25%" align="center" valign="middle"
-											bgcolor="#B6DFEF"
-											style="border-right-color:#C9F1FF; border-right-style: solid;"><p>xxx</p>
-											<p>我的收藏</p></td>
-										<td width="25%" align="center" valign="middle"
-											bgcolor="#B6DFEF"
-											style="border-right-color:#C9F1FF; border-right-style: solid;"><p>xxx</p>
-											<p>收听</p></td>
-										<td width="25%" align="center" valign="middle"
-											bgcolor="#B6DFEF"><p>xxx</p>
-											<p>听众</p></td>
-									</tr>
-								</table></td>
-						</tr>
-					</table></td>
+				<td colspan="3" rowspan="3"><jsp:include
+						page="broadcast_new_blog.jsp" /></td>
+				<td height="243">&nbsp;</td>
+				<td rowspan="2" align="center" valign="top"
+					style="background-color: #C9F1FF; border-color: #C9F1FF"><jsp:include
+						page="user_bolg_data.jsp" /></td>
 			</tr>
 			<tr>
-				<td width="40%" rowspan="2"></td>
-				<td width="12%" rowspan="2" align="right"><span class="label">我是提示哟</span>
-				</td>
-				<td width="15%" rowspan="2" align="right"><button
-						id="broadcast" class="btn btn-primary">广播</button></td>
 				<td rowspan="2"></td>
-				<td height="9" bgcolor="#C9F1FF"></td>
 			</tr>
 			<tr>
-				<td height="22" align="right" bgcolor="#C9F1FF"><span
-					class="label">个人信息</span></td>
+				<td height="22" align="right" bgcolor="#C9F1FF"></td>
 			</tr>
 			<tr>
-				<td colspan="3" align="center"><div class="nTab"
-						style="width:98%; height:100%">
-						<div>
-							<div class="nTab" style=" width:100%">
-								<!-- 标题开始 -->
-								<div class="TabTitle">
-									<!-- 标题开始 -->
-									<ul class="nav nav-tabs">
-										<li class="active"><a href="#">Home</a></li>
-										<li><a href="#">Profile</a></li>
-										<li><a href="#">Messages</a></li>
-									</ul>
-								</div>
-							</div>
-							<div class="TabContent">
-								<div id="myTab1_Content0">
-
-									<%
-										int pageSize = 5;
-										Page firstPage = MiniBlog.dao.initial(pageSize);
-										List<MiniBlog> list = firstPage.getList();
-										int totalRow = firstPage.getTotalRow();
-										int totalPage = firstPage.getTotalPage();
-									%>
-									<div>
-										<input id="totalPage" type="hidden" value="<%=totalPage%>" />
-										<input id="totalRow" type="hidden" value="<%=totalRow%>" /> <input
-											id="pageSize" type="hidden" value="<%=pageSize%>" />
-									</div>
-									<%
-										for (int i = 0; i < list.size(); i++) {
-											MiniBlog blog = list.get(i);
-									%>
-									<div id="blog_content<%=i%>">
-										<table width="100%" height="180"
-											style="border-bottom:solid 1px #C9F1FF">
-											<tr>
-												<td width="93" rowspan="2" align="center" valign="top"><p>
-														<img src="img/touxiang.png" alt="" name="touxiang"
-															width="74" height="77" id="touxiang<%=i%>"
-															style="margin:10px;" />
-													</p></td>
-												<td height="128" colspan="4" valign="top"><label
-													id="show_author<%=i%>"><%=blog.getStr("author")%></label>
-													<div style="margin: 10px" id="show_content<%=i%>"><%=blog.getStr("content")%></div>
-												</td>
-											</tr>
-											<tr>
-												<td width="326" style="font-size:12px"><span
-													id="show_time<%=i%>"><%=blog.getTimestamp("createtime").toString()%></span>,
-													来自@me微薄。<a id="showallcomment<%=i%>"
-													style="font-size:12px;">查看全部评论</a>
-												</td>
-												<td width="48" align="center">
-													<div class="btn-group" style="margin: 9px 0;">
-														<input id="blog_id<%=i%>" type="hidden"
-															value="<%=blog.getInt("id")%>" />
-														<button id="forward<%=i%>" class="btn btn-info btn-small"
-															value="<%=i%>">转播</button>
-														<button id="go_to_review<%=i%>"
-															class="btn btn-info btn-small" value="<%=i%>">评论</button>
-														<button id="sendtouch<%=i%>"
-															class="btn btn-info btn-small" value="<%=i%>">对话</button>
-													</div></td>
-
-											</tr>
-											<tr>
-												<td width="93" align="center" valign="top">&nbsp;</td>
-												<td colspan="4"><div id="blog_review_div<%=i%>">
-														<table width="98%" border="0" align="center"
-															cellpadding="2" cellspacing="2">
-															<tr>
-																<td colspan="3"><textarea id="comment<%=i%>"
-																		name="textarea" rows="3"></textarea>
-																	<table width="100%" height="53">
-																		<tr>
-																			<td width="55" height="47" valign="middle"><span><img
-																					src="" alt="tupian1" name="t1" width="25"
-																					height="25" id="t10" /><a href="#">aaaa</a> </span></td>
-																			<td width="55" valign="middle"><span><img
-																					src="" alt="tupian1" name="t1" width="25"
-																					height="25" id="t10" /><a href="#">bbb</a> </span></td>
-																			<td width="55" valign="middle"><span><img
-																					src="" alt="tupian1" name="t1" width="25"
-																					height="25" id="t11" /><a href="#">ccc</a> </span></td>
-																			<td width="55" valign="middle"><span><img
-																					src="" alt="tupian1" name="t1" width="25"
-																					height="25" id="t12" /><a href="#">ddd</a> </span></td>
-																			<td width="132"></td>
-																			<td width="68" align="right"><button
-																					id="review_button<%=i%>"
-																					class="btn btn-primary btn-small" value="<%=i%>">评论</button></td>
-																		</tr>
-																	</table>
-																</td>
-															</tr>
-															<tr>
-																<td width="83%">
-																	<div id="show_comment<%=i%>"></div></td>
-																<td width="9%" align="center"><a
-																	style="font-size:12px" href="#">评论</a></td>
-																<td width="8%" align="center"><a
-																	style="font-size:12px" href="#">转载</a></td>
-															</tr>
-														</table>
-													</div></td>
-											</tr>
-										</table>
-									</div>
-									<%
-										}
-									%>
-									<div class="pagination pagination-right"></div>
-								</div>
-								<div id="myTab1_Content1" class="none">111</div>
-								<div id="myTab1_Content2" class="none">222</div>
-								<div id="myTab1_Content3" class="none">333</div>
-							</div>
-							<p>&nbsp;</p>
-						</div>
-					</div>
-				</td>
+				<td colspan="3" align="center"><jsp:include
+						page="main_mblog.jsp" /></td>
 				<td></td>
-				<td bgcolor="#C9F1FF" valign="top"><div>
-						此处显示新 Div 标签的内容
-						<table cellspacing="10" bgcolor="#C9F1FF">
-							<tr style="width:500px;">
-								<td width="25%"><font style="color: red">*</font><b>Email：</b>
-								</td>
-								<td width="75%"><input type="text" class="product_thumb"
-									name="email" id="email" value="请务必填写有效的Email地址"></td>
-							</tr>
-							<tr>
-								<td><font style="color: red">*</font><b>密码：</b></td>
-								<td><input type="text" class="product_thumb"
-									name="password" value="请输入不少于6位的密码" id="password"><input
-									name="password" type="password" class="product_thumb"
-									id="real_password">
-								</td>
-							</tr>
-							<tr>
-								<td><font style="color: red">*</font><b>昵称：</b>
-								</td>
-								<td><input type="text" class="product_thumb" id="nickname">
-								</td>
-							</tr>
-							<tr>
-								<td><font style="color: red">*</font><b>真实姓名：</b>
-								</td>
-								<td><input type="text" class="product_thumb" id="realname">
-								</td>
-							</tr>
-							<tr>
-								<td><font style="color: red">*</font><b>性别：</b>
-								</td>
-
-								<td><div id="sex_radio">
-										<input type="radio" value="man" name="sex" id="radio1">男
-										<input type="radio" name="sex" value="woman" id="radio2">女
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td><font style="color: red;">*</font><b>地区：</b>
-								</td>
-								<td><select id="area">
-										<option value="请选择">请选择</option>
-										<option value="北京市">北京市</option>
-										<option value="天津市">天津市</option>
-										<option value="河北省">河北省</option>
-										<option value="山西省">山西省</option>
-										<option value="辽宁省">辽宁省</option>
-										<option value="吉林省">吉林省</option>
-										<option value="上海市">上海市</option>
-										<option value="江苏省">江苏省</option>
-										<option value="浙江省">浙江省</option>
-										<option value="安徽省">安徽省</option>
-										<option value="福建省">福建省</option>
-										<option value="江西省">江西省</option>
-										<option value="山东省">山东省</option>
-										<option value="河南省">河南省</option>
-										<option value="内蒙古自治区">内蒙古自治区</option>
-										<option value="黑龙江省">黑龙江省</option>
-										<option value="湖北省">湖北省</option>
-										<option value="湖南省">湖南省</option>
-										<option value="广东省">广东省</option>
-										<option value="广西壮族自治区">广西壮族自治区</option>
-										<option value="海南省">海南省</option>
-										<option value="四川省">四川省</option>
-										<option value="重庆市">重庆市</option>
-										<option value="台湾省">台湾省</option>
-										<option value="贵州省">贵州省</option>
-										<option value="云南省">云南省</option>
-										<option value="西藏自治区">西藏自治区</option>
-										<option value="陕西省">陕西省</option>
-										<option value="甘肃省">甘肃省</option>
-										<option value="青海省">青海省</option>
-										<option value="宁夏回族自治区">宁夏回族自治区</option>
-										<option value="新疆维吾尔族自治区">新疆维吾尔族自治区</option>
-										<option value="香港特别行政区">香港特别行政区</option>
-										<option value="澳门特别行政区">澳门特别行政区</option>
-										<option value="东南亚">东南亚</option>
-										<option value="欧洲">欧洲</option>
-										<option value="南美洲">南美洲</option>
-										<option value="大洋洲">大洋洲</option>
-										<option value="非洲">非洲</option>
-										<option value="亚洲">亚洲</option>
-										<option value="美国">美国</option>
-										<option value="加拿大">加拿大</option>
-										<option value="新加坡">新加坡</option>
-										<option value="韩国">韩国</option>
-										<option value="日本">日本</option>
-								</select></td>
-							</tr>
-						</table>
-
-					</div></td>
+				<td bgcolor="#C9F1FF" valign="top"><jsp:include
+						page="user_set.jsp" /></td>
 			</tr>
 		</table>
-
 	</div>
 </body>
 </html>

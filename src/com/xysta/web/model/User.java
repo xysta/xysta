@@ -26,4 +26,12 @@ public class User extends Model<User> {
 	public User findByEmail(String email) {
 		return dao.findFirst("SELECT * FROM xysta_user WHERE email=?", email);
 	}
+	
+	public static User findById(int id){
+		return dao.findFirst("SELECT * FROM xysta_user WHERE id=?", id);
+	}
+	
+	public static User findByNick(String nickname){
+		return dao.findFirst("SELECT * FROM xysta_user WHERE nickname=?", nickname);
+	}
 }

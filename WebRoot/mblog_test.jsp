@@ -7,7 +7,6 @@
 	+ request.getServerName() + ":" + request.getServerPort()
 	+ path + "/";
 %>
-
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -15,16 +14,14 @@
 <title>@me微博</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-<link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.css"
-	type="text/css"></link>
-<link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.min.css"
-	type="text/css"></link>
 <link rel="stylesheet" href="bootstrap/css/bootstrap.css"
 	type="text/css"></link>
 <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"
 	type="text/css"></link>
-
 <script type="text/javascript" src="jquery/jquery-1.7.2.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap-dropdown.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap-scrollspy.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap-tab.js"></script>
 <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
 <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
 
@@ -54,6 +51,26 @@ textarea {
 
 body {
 	background-color: #6BC9EB;
+}
+
+.td {
+	border-right-color: #C9F1FF;
+	border-right-style: solid;
+	background-color: #B6DFEF;
+}
+
+.hoveron {
+	border-right-color: #C9F1FF;
+	border-right-style: solid;
+	background-color: #A8D2E4;;
+}
+
+.td2 {
+	background-color: #B6DFEF;
+}
+
+.hoveron2 {
+	background-color: #A8D2E4;;
 }
 </style>
 
@@ -109,23 +126,44 @@ body {
 		var pageSize = $("#pageSize").val();
 		var show_size = 7;
 
-		var current_blog = 0;
-		for ( var i = 0; i < pageSize; i++) {
-
-			$("#blog_review_div" + i).hide();
-			$("#go_to_review" + i).click(function() {
-
-				current_blog = parseInt($(this).val());
-
-				if ($("#blog_review_div" + current_blog).is(":hidden")) {
-					$("#blog_review_div" + current_blog).show();
-				} else {
-					$("#blog_review_div" + current_blog).hide();
+		//刷微博
+		function broadcast_new_blog(content) {
+			$.ajax({
+				type : "post",
+				//	url : "http://192.168.0.103:8080/xysta/save",
+				url : "save",
+				data : {
+					content : content
+				},
+				cache : false,
+				dataType : "json",
+				success : function(data) {
+					var res = data.result;
+					if (res) {
+						//console.log(data.message.email);
+						//window.location="mblog.jsp";
+						console.log("终于刷了一条");
+					} else {
+						//console.log(data.message);
+						console.log("刷不出来啊啊，亲");
+					}
 				}
 			});
-
 		}
 
+		$("#broadcast").click(function() {
+			var new_blog_content = $("#new_blog").val();
+
+			broadcast_new_blog(new_blog_content);
+
+			ajaxGetJson(current_page, pageSize);
+
+			setTimeout(function() {
+				$("#new_blog").val("");
+			}, 1500);
+		});
+
+		//生成分页工具条的html代码
 		function creat_paginate_bar(total_page) {
 			var ul_html = "<ul><li id='previous_li' class='disabled'>"
 					+ "<a id='previous_page' style='color: #08c;'>上一页</a></li>";
@@ -145,6 +183,7 @@ body {
 		paginate_bar_function();
 		showOrHide_li(show_size);
 
+		//向数据库发送请求，分页显示数据
 		function ajaxGetJson(pageNumber, pageSize0) {
 			$.ajax({
 				type : "post",
@@ -191,6 +230,98 @@ body {
 			});
 		}
 
+		//先数据库发送请求，显示“评论”
+		function showComment(blog_id, current_blog) {
+			$.ajax({
+				type : "post",
+				//	url : "http://192.168.0.103:8080/xysta/findCommentByBlogid",
+				url : "findCommentByBlogid",
+				data : {
+					blog_id : blog_id
+				},
+				cache : false,
+				dataType : "json",
+				success : function(data) {
+					var res = data.message;
+					var comment_html = "";
+					if (res != null) {
+						for ( var i = 0; i < res.length; i++) {
+							var temp_comment = res[i];
+							comment_html += "<p><span style='color:red'>(评论人)"
+									+ temp_comment.reviewer
+									+ "：</span><span>评论内容："
+									+ temp_comment.comment + "</span></p>";
+						}
+						$("#show_comment" + current_blog).html(comment_html);
+					} else {
+						//console.log(data.message);
+						$("#show_comment" + current_blog).html("暂无相关评论！")
+					}
+				}
+			});
+
+		}
+
+		//先数据库发送请求，添加“评论”
+		function commentSave(blog_id, comment) {
+			$.ajax({
+				type : "post",
+				url : "http://192.168.0.103:8080/xysta/commentSave",
+				//url : "commentSave",
+				data : {
+					blog_id : blog_id,
+					comment : comment
+				},
+				cache : false,
+				dataType : "json",
+				success : function(data) {
+					var res = data.result;
+					if (res != null) {
+						console.log("评论成功！");
+					} else {
+						//console.log(data.message);
+						console.log("评论失败？");
+					}
+				}
+			});
+
+		}
+
+		//动态切换的评论div的显示或者隐藏
+		var current_blog = 0;
+		function reviw_function() {
+			for ( var i = 0; i < pageSize; i++) {
+
+				$("#blog_review_div" + i).hide();
+				$("#go_to_review" + i).click(function() {
+
+					current_blog = parseInt($(this).val());
+
+					if ($("#blog_review_div" + current_blog).is(":hidden")) {
+						$("#blog_review_div" + current_blog).show();
+					} else {
+						$("#blog_review_div" + current_blog).hide();
+					}
+
+					var blog_id = $("#blog_id" + current_blog).val();
+					showComment(blog_id, current_blog);
+
+				});
+
+				$("#review_button" + i).click(function() {
+					current_blog = parseInt($(this).val());
+					var blog_id = $("#blog_id" + current_blog).val();
+					var comment = $("#comment" + current_blog).val();
+					//console.log("当前blog: "+current_blog+", blog_id为："+blog_id+",内容为："+comment);
+					commentSave(blog_id, comment);
+
+				});
+
+			}
+		}
+		reviw_function();
+
+		//分页工具条相关的js代码
 		function paginate_bar_function() {
 			$(".pagination").ready(function(e) {
 				$("#li" + current_page).removeClass("disabled");
@@ -272,10 +403,9 @@ body {
 			$("#li1").after(temp_li1);
 			$("#li" + totalPage).before(temp_li2);
 
-			
-
 		}
 
+		//分页工具条的显示相关
 		function showOrHide_li(show_size) {//show_size为为省略号中间显示的页码的个数(奇数)
 			var critical_value1 = 1 + ((show_size - 1) / 2 + 2);//句号右边最小为3
 			var critical_value2 = totalPage - ((show_size - 1) / 2 + 2);//句号右边最小为3
@@ -317,119 +447,124 @@ body {
 
 		}
 
-		function broadcast_new_blog(content) {
-			$.ajax({
-				type : "post",
-				//	url : "http://192.168.0.103:8080/xysta/save",
-				url : "save",
-				data : {
-					content : content
-				},
-				cache : false,
-				dataType : "json",
-				success : function(data) {
-					var res = data.result;
-					if (res) {
-						//console.log(data.message.email);
-						//window.location="mblog.jsp";
-						console.log("终于刷了一条");
-					} else {
-						//console.log(data.message);
-						console.log("刷不出来啊啊，亲");
-					}
-				}
-			});
-		}
+	});
 
-		$("#broadcast").click(function() {
-			var new_blog_content = $("#new_blog").val();
-
-			broadcast_new_blog(new_blog_content);
-
-			ajaxGetJson(current_page, pageSize);
-
-			setTimeout(function() {
-				$("#new_blog").val("");
-			}, 1500);
+	$(function() {
+		$("#td1").hover(function() {
+			$("#td1").addClass("hoveron");
+		}, function() {
+			$("#td1").removeClass('hoveron')
 		});
 
+		$("#td2").hover(function() {
+			$("#td2").addClass("hoveron");
+		}, function() {
+			$("#td2").removeClass('hoveron')
+		});
+
+		$("#td3").hover(function() {
+			$("#td3").addClass("hoveron");
+		}, function() {
+			$("#td3").removeClass('hoveron')
+		});
+
+		$("#td4").hover(function() {
+			$("#td4").addClass("hoveron2");
+		}, function() {
+			$("#td4").removeClass('hoveron2')
+		});
+
+		$(".dropdown-toggle").dropdown();
+		$(".navbar-inner").scrollspy();
+
+		$('#myTab a').click(function(e) {
+			e.preventDefault();
+			$(this).tab('show');
+		});
+
+		$("#set").click(function() {
+			if ($("#user_set").attr('style') == "visibility: hidden") {
+				$("#user_set").attr("style", "visibility: visible");
+			} else {
+				$("#user_set").attr("style", "visibility: hidden");
+			}
+			//$("#user_set").hide();
+		});
 	});
 </script>
 
 
 </head>
 <body>
-	<div id="navbar" class="navbar" style="z-index: 2">
+	<div id="navbar" class="navbar navbar-fixed-top">
 		<div class="navbar-inner"
-			style="background-image: -webkit-linear-gradient(top, rgb(50, 162, 208), rgb(28, 216, 216)); ">
+			style="background-image: -webkit-linear-gradient(top, rgb(50, 162, 208), rgb(28, 216, 216) );">
 			<div class="container" style="width: auto;">
 				<a class="btn btn-navbar" data-toggle="collapse"
 					data-target=".nav-collapse"
-					style="color: rgb(51, 51, 51); background-image: -webkit-linear-gradient(top, rgb(255, 255, 255), rgb(230, 230, 230)); background-color: rgb(230, 230, 230); ">
+					style="color: rgb(51, 51, 51); background-image: -webkit-linear-gradient(top, rgb(255, 255, 255), rgb(230, 230, 230) ); background-color: rgb(230, 230, 230);">
 					<span class="icon-bar"></span> <span class="icon-bar"></span> <span
 					class="icon-bar"></span> </a> <a class="brand" href="#"
-					style="color: rgb(247, 242, 242); padding: 8px 20px 12px; font-size: 20px; ">@me
-					微薄</a>
+					style="color: rgb(247, 242, 242); padding: 8px 20px 12px; font-size: 20px;"><span
+					style="visibility: hidden">aaaa</span>@me 微薄</a>
 				<div class="nav-collapse">
 					<ul class="nav">
 						<li><a href="#"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Home</a>
+							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px;">Home</a>
 						</li>
 						<li class="divider-vertical"
-							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px; "></li>
+							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px;"></li>
 						<li class="active"><a href="#"
-							style="color: rgb(247, 239, 239); padding: 10px 10px 11px; font-size: 14px; ">Miracle</a>
+							style="color: rgb(247, 239, 239); padding: 10px 10px 11px; font-size: 14px;">Miracle</a>
 						</li>
 						<li class="divider-vertical"
-							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px; "></li>
+							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px;"></li>
 						<li><a href="#"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Link</a>
+							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px;">Link</a>
 						</li>
 						<li><a href="#"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Link</a>
+							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px;">Link</a>
 						</li>
 						<li class="dropdown"><a href="#" class="dropdown-toggle"
 							data-toggle="dropdown"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Dropdown
+							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px;">Dropdown
 								<b class="caret"></b> </a>
 							<ul class="dropdown-menu">
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Action</a>
+								<li><a href="#" style="color: rgb(85, 85, 85);">Action</a>
 								</li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Another
-										action</a>
-								</li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Something
-										else here</a>
-								</li>
+								<li><a href="#" style="color: rgb(85, 85, 85);">Another
+										action</a></li>
+								<li><a href="#" style="color: rgb(85, 85, 85);">Something
+										else here</a></li>
 								<li class="divider"></li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Separated
-										link</a>
-								</li>
+								<li><a href="#" style="color: rgb(85, 85, 85);">Separated
+										link</a></li>
 							</ul></li>
 					</ul>
+					<form class="navbar-search pull-left" action=""
+						style="height: auto">
+						<input type="text" class="search-query span2" placeholder="Search">
+					</form>
 					<ul class="nav pull-right">
 						<li><a href="#"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Link</a>
+							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px;">Link</a>
 						</li>
 						<li class="divider-vertical"
-							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px; "></li>
+							style="border-right-width: 1px; border-right-style: solid; border-right-color: rgb(79, 149, 234); background-color: rgb(95, 107, 216); height: 41px;"></li>
 						<li class="dropdown"><a href="#" class="dropdown-toggle"
 							data-toggle="dropdown"
-							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px; ">Dropdown
+							style="color: rgb(247, 247, 247); padding: 10px 10px 11px; font-size: 14px;">Dropdown
 								<b class="caret"></b> </a>
 							<ul class="dropdown-menu">
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Action</a>
+								<li><a href="#" style="color: rgb(85, 85, 85);">Action</a>
 								</li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Another
-										action</a>
-								</li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Something
-										else here</a>
-								</li>
+								<li><a href="#" style="color: rgb(85, 85, 85);">Another
+										action</a></li>
+								<li><a href="#" style="color: rgb(85, 85, 85);">Something
+										else here</a></li>
 								<li class="divider"></li>
-								<li><a href="#" style="color: rgb(85, 85, 85); ">Separated
-										link</a>
-								</li>
+								<li><a href="#" style="color: rgb(85, 85, 85);">Separated
+										link</a></li>
 							</ul></li>
 					</ul>
 				</div>
@@ -455,114 +590,93 @@ body {
 							<table>
 								<tr>
 									<td><span><img name="t1" src="" width="25"
-											height="25" alt="tupian1" /><a href="#">表情</a> </span>
-									</td>
+											height="25" alt="tupian1" /><a href="#">表情</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t1" /><a href="#">图片</a> </span>
-									</td>
+											width="25" height="25" id="t1" /><a href="#">图片</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t2" /><a href="#">朋友</a> </span>
-									</td>
+											width="25" height="25" id="t2" /><a href="#">朋友</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t3" /><a href="#">ddd</a> </span>
-									</td>
+											width="25" height="25" id="t3" /><a href="#">ddd</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t4" /><a href="#">eee</a> </span>
-									</td>
+											width="25" height="25" id="t4" /><a href="#">eee</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t5" /><a href="#">fff</a> </span>
-									</td>
+											width="25" height="25" id="t5" /><a href="#">fff</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t6" /><a href="#">ggg</a> </span>
-									</td>
+											width="25" height="25" id="t6" /><a href="#">ggg</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t7" /><a href="#">hhh</a> </span>
-									</td>
+											width="25" height="25" id="t7" /><a href="#">hhh</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t8" /><a href="#">iii</a> </span>
-									</td>
+											width="25" height="25" id="t8" /><a href="#">iii</a> </span></td>
 									<td><span><img src="" alt="tupian1" name="t1"
-											width="25" height="25" id="t9" /><a href="#">jjj</a> </span>
-									</td>
+											width="25" height="25" id="t9" /><a href="#">jjj</a> </span></td>
 								</tr>
 							</table> </span>
-					</div>
-				</td>
+					</div></td>
 				<td>&nbsp;</td>
 				<td align="center" valign="top"
-					style="background-color:#C9F1FF; border-color:#C9F1FF"><table
-						width="100%" border="0" cellspacing="2" cellpadding="2"
-						style=" border-color:#C9F1FF; background-color:#C9F1FF">
+					style="background-color: #C9F1FF; border-color: #C9F1FF">
+					<table width="100%" border="0" cellspacing="2" cellpadding="2"
+						style="border-color: #C9F1FF; background-color: #C9F1FF">
 						<tr>
 							<td width="31%" height="105" align="center"><img
-								src="img/touxiang.png" alt="aa" />
-							</td>
+								src="img/touxiang.png" alt="aa" /></td>
 							<td width="69%">&nbsp;</td>
 						</tr>
 						<tr>
-							<td colspan="2"><table width="100%" id="user_bolg_data">
+							<td colspan="2">
+								<table width="100%" id="user_bolg_data">
 									<tr bgcolor="#B6DFEF">
-										<td width="25%" align="center" valign="middle"
-											bgcolor="#B6DFEF"
-											style="border-right-color:#C9F1FF; border-right-style: solid;"><p>xxx</p>
-											<p>我的广播</p>
-										</td>
-										<td width="25%" align="center" valign="middle"
-											bgcolor="#B6DFEF"
-											style="border-right-color:#C9F1FF; border-right-style: solid;"><p>xxx</p>
-											<p>我的收藏</p>
-										</td>
-										<td width="25%" align="center" valign="middle"
-											bgcolor="#B6DFEF"
-											style="border-right-color:#C9F1FF; border-right-style: solid;"><p>xxx</p>
-											<p>收听</p>
-										</td>
-										<td width="25%" align="center" valign="middle"
-											bgcolor="#B6DFEF"><p>xxx</p>
-											<p>听众</p>
-										</td>
+										<td id="td1" class="td" width="25%" align="center"
+											valign="middle">
+											<p>xxx</p>
+											<p>我的广播</p></td>
+										<td id="td2" class="td" width="25%" align="center"
+											valign="middle">
+											<p>xxx</p>
+											<p>我的收藏</p></td>
+										<td id="td3" class="td" width="25%" align="center"
+											valign="middle">
+											<p>xxx</p>
+											<p>收听</p></td>
+										<td id="td4" class="td2" width="25%" align="center"
+											valign="middle">
+											<p>xxx</p>
+											<p>听众</p></td>
 									</tr>
-								</table>
-							</td>
+								</table></td>
 						</tr>
-					</table>
-				</td>
+					</table></td>
 			</tr>
 			<tr>
 				<td width="40%" rowspan="2"></td>
 				<td width="12%" rowspan="2" align="right"><span class="label">我是提示哟</span>
 				</td>
-				<td width="15%" rowspan="2" align="right"><button
-						id="broadcast" class="btn btn-primary">广播</button>
-				</td>
+				<td width="15%" rowspan="2" align="right">
+					<button id="broadcast" class="btn btn-primary">广播</button></td>
 				<td rowspan="2"></td>
 				<td height="9" bgcolor="#C9F1FF"></td>
 			</tr>
 			<tr>
 				<td height="22" align="right" bgcolor="#C9F1FF"><span
-					class="label">个人信息</span>
-				</td>
+					class="label" id="set">个人信息</span></td>
 			</tr>
 			<tr>
-				<td colspan="3" align="center"><div class="nTab"
-						style="width:98%; height:100%">
+				<td colspan="3" align="center">
+					<div class="nTab" style="width: 100%; height: 100%">
 						<div>
-							<div class="nTab" style=" width:100%">
+							<div class="nTab" style="width: 100%">
 								<!-- 标题开始 -->
 								<div class="TabTitle">
 									<!-- 标题开始 -->
-									<ul class="nav nav-tabs">
-										<li class="active"><a href="#">Home</a>
-										</li>
-										<li><a href="#">Profile</a>
-										</li>
-										<li><a href="#">Messages</a>
-										</li>
+									<ul class="nav nav-tabs" id="mytab">
+										<li class="active"><a href="#content0">Home</a></li>
+										<li><a href="#content1">Profile</a></li>
+										<li><a href="#content2">Messages</a></li>
 									</ul>
 								</div>
 							</div>
-							<div class="TabContent">
-								<div id="myTab1_Content0">
+							<div class="tab-content">
+								<div class="tab-pane active" id="content0">
 
 									<%
 										int pageSize = 5;
@@ -582,39 +696,44 @@ body {
 									%>
 									<div id="blog_content<%=i%>">
 										<table width="100%" height="180"
-											style="border-bottom:solid 1px #C9F1FF">
+											style="border-bottom: solid 1px #C9F1FF">
 											<tr>
-												<td width="93" rowspan="2" align="center" valign="top"><p>
+												<td width="93" rowspan="2" align="center" valign="top">
+													<p>
 														<img src="img/touxiang.png" alt="" name="touxiang"
 															width="74" height="77" id="touxiang<%=i%>"
-															style="margin:10px;" />
-													</p>
-												</td>
+															style="margin: 10px;" />
+													</p></td>
 												<td height="128" colspan="4" valign="top"><label
 													id="show_author<%=i%>"><%=blog.getStr("author")%></label>
 													<div style="margin: 10px" id="show_content<%=i%>"><%=blog.getStr("content")%></div>
 												</td>
 											</tr>
 											<tr>
-												<td width="326" style="font-size:12px"><span
+												<td width="326" style="font-size: 12px"><span
 													id="show_time<%=i%>"><%=blog.getTimestamp("createtime").toString()%></span>,
-													来自@me微薄。<a id="showallcomment<%=i%>"
-													style="font-size:12px;">查看全部评论</a></td>
+													来自@me微薄。 <a id="showallcomment<%=i%>"
+													style="font-size: 12px;">查看全部评论</a></td>
 												<td width="48" align="center">
+
 													<div class="btn-group" style="margin: 9px 0;">
+														<input id="blog_id<%=i%>" type="hidden"
+															value="<%=blog.getInt("id")%>" />
 														<button id="forward<%=i%>" class="btn btn-info btn-small"
 															value="<%=i%>">转播</button>
 														<button id="go_to_review<%=i%>"
-															class="btn btn-info btn-small" value="<%=i%>">评论</button>
+															class="btn btn-info btn-small" value="<%=i%>">
+															评论</button>
 														<button id="sendtouch<%=i%>"
-															class="btn btn-info btn-small" value="<%=i%>">对话</button>
-													</div>
-												</td>
+															class="btn btn-info btn-small" value="<%=i%>">
+															对话</button>
+													</div></td>
 
 											</tr>
 											<tr>
 												<td width="93" align="center" valign="top">&nbsp;</td>
-												<td colspan="4"><div id="blog_review_div<%=i%>">
+												<td colspan="4">
+													<div id="blog_review_div<%=i%>">
 														<table width="98%" border="0" align="center"
 															cellpadding="2" cellspacing="2">
 															<tr>
@@ -624,72 +743,77 @@ body {
 																		<tr>
 																			<td width="55" height="47" valign="middle"><span><img
 																					src="" alt="tupian1" name="t1" width="25"
-																					height="25" id="t10" /><a href="#">aaaa</a> </span>
-																			</td>
+																					height="25" id="t10" /><a href="#">aaaa</a> </span></td>
 																			<td width="55" valign="middle"><span><img
 																					src="" alt="tupian1" name="t1" width="25"
-																					height="25" id="t10" /><a href="#">bbb</a> </span>
-																			</td>
+																					height="25" id="t10" /><a href="#">bbb</a> </span></td>
 																			<td width="55" valign="middle"><span><img
 																					src="" alt="tupian1" name="t1" width="25"
-																					height="25" id="t11" /><a href="#">ccc</a> </span>
-																			</td>
+																					height="25" id="t11" /><a href="#">ccc</a> </span></td>
 																			<td width="55" valign="middle"><span><img
 																					src="" alt="tupian1" name="t1" width="25"
-																					height="25" id="t12" /><a href="#">ddd</a> </span>
-																			</td>
+																					height="25" id="t12" /><a href="#">ddd</a> </span></td>
 																			<td width="132"></td>
-																			<td width="68" align="right"><button
-																					id="review_button<%=i%>" class="btn btn-primary"
-																					href="#">评论</button>
-																			</td>
+																			<td width="68" align="right">
+																				<button id="review_button<%=i%>"
+																					class="btn btn-primary" href="#">评论</button></td>
 																		</tr>
 																	</table></td>
 															</tr>
 															<tr>
-																<td width="83%"><p></p>
-																</td>
+																<td width="83%">
+																	<div id="show_comment<%=i%>"></div></td>
 																<td width="9%" align="center"><a
-																	style="font-size:12px" href="#">评论</a>
-																</td>
+																	style="font-size: 12px" href="#">评论</a></td>
 																<td width="8%" align="center"><a
-																	style="font-size:12px" href="#">转载</a>
-																</td>
+																	style="font-size: 12px" href="#">转载</a></td>
 															</tr>
 														</table>
-													</div>
-												</td>
+													</div></td>
 											</tr>
 										</table>
 									</div>
 									<%
 										}
 									%>
-									<div class="pagination pagination-right"></div>
+									<div class="pagination pagination-centered">
+										<ul>
+											<li id="previous_li" class="disabled"><a
+												id="previous_page" style="color: #08c;">上一页</a></li>
+											<%
+												for (int i = 1; i <= totalPage; i++) {
+											%>
+											<li id="li<%=i%>" class="disabled"><a id="page<%=i%>"
+												style="color: #08c;"><%=i%></a> <%
+ 	}
+ %>
+											
+											<li id="next_li" class="disabled"><a id="next_page"
+												style="color: #08c;">下一页</a></li>
+										</ul>
+									</div>
 								</div>
-								<div id="myTab1_Content1" class="none">111</div>
-								<div id="myTab1_Content2" class="none">222</div>
-								<div id="myTab1_Content3" class="none">333</div>
+								<div class="tab-pane" id="content1">111</div>
+								<div class="tab-pane" id="content2">222</div>
+
 							</div>
 							<p>&nbsp;</p>
 						</div>
 					</div></td>
 				<td></td>
-				<td bgcolor="#C9F1FF" valign="top"><div>
-						此处显示新 Div 标签的内容
+				<td bgcolor="#C9F1FF" valign="top">
+					<div id="user_set" style="visibility: hidden">
 						<table cellspacing="10" bgcolor="#C9F1FF">
-							<tr style="width:500px;">
+							<tr style="width: 500px;">
 								<td width="25%"><font style="color: red">*</font><b>Email：</b>
 								</td>
 								<td width="75%"><input type="text" class="product_thumb"
-									name="email" id="email" value="请务必填写有效的Email地址">
-								</td>
+									name="email" id="email" value="请务必填写有效的Email地址"></td>
 							</tr>
 							<tr>
-								<td><font style="color: red">*</font><b>密码：</b>
-								</td>
+								<td><font style="color: red">*</font><b>密码：</b></td>
 								<td><input type="text" class="product_thumb"
-									name="password" value="请输入不少于6位的密码" id="password"><input
+									name="password" value="请输入不少于6位的密码" id="password"> <input
 									name="password" type="password" class="product_thumb"
 									id="real_password"></td>
 							</tr>
@@ -706,9 +830,11 @@ body {
 							<tr>
 								<td><font style="color: red">*</font><b>性别：</b></td>
 
-								<td><div id="sex_radio">
-										<input type="radio" value="man" name="sex" id="radio1">男
-										<input type="radio" name="sex" value="woman" id="radio2">女
+								<td>
+									<div id="sex_radio">
+										<input type="radio" value="man" name="sex" id="radio1">
+										男 <input type="radio" name="sex" value="woman" id="radio2">
+										女
 									</div></td>
 							</tr>
 							<tr>
@@ -760,16 +886,13 @@ body {
 										<option value="新加坡">新加坡</option>
 										<option value="韩国">韩国</option>
 										<option value="日本">日本</option>
-								</select>
-								</td>
+								</select></td>
 							</tr>
 						</table>
 
-					</div>
-				</td>
+					</div></td>
 			</tr>
 		</table>
-
 	</div>
 </body>
 </html>

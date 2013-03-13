@@ -12,10 +12,11 @@ import com.jfinal.render.ViewType;
 import com.xysta.web.controller.CommentController;
 import com.xysta.web.controller.MainController;
 import com.xysta.web.controller.MiniBlogController;
+import com.xysta.web.controller.RelationController;
 import com.xysta.web.controller.UserController;
-import com.xysta.web.interceptor.GlobalIntercepter;
 import com.xysta.web.model.Comment;
 import com.xysta.web.model.MiniBlog;
+import com.xysta.web.model.Relation;
 import com.xysta.web.model.User;
 
 public class Config extends JFinalConfig {
@@ -32,11 +33,12 @@ public class Config extends JFinalConfig {
 		me.add("/user",UserController.class);
 		me.add("/miniblog",MiniBlogController.class);
 		me.add("/review",CommentController.class);
+		me.add("/relation",RelationController.class);
 	}
 
 	@Override
 	public void configPlugin(Plugins me) {
-		C3p0Plugin cp = new C3p0Plugin("jdbc:mysql:///xysta?useUnicode=true&characterEncoding=utf-8", "root", "password");
+		C3p0Plugin cp = new C3p0Plugin("jdbc:mysql:///xysta?useUnicode=true&characterEncoding=utf-8", "root", "123456");
 		me.add(cp);
 		ActiveRecordPlugin arp = new ActiveRecordPlugin(cp);
 		me.add(arp);
@@ -44,11 +46,12 @@ public class Config extends JFinalConfig {
 		arp.addMapping("xysta_user", User.class);
 		arp.addMapping("xysta_blog", MiniBlog.class);
 		arp.addMapping("xysta_comment", Comment.class);
+		arp.addMapping("xysta_relation", Relation.class);
 	}
 
 	@Override
 	public void configInterceptor(Interceptors me) {
-        me.add(new GlobalIntercepter());
+		
 	}
 
 	@Override
