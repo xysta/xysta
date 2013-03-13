@@ -2,8 +2,10 @@ package com.xysta.web.service;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
 import com.xysta.web.model.Relation;
 import com.xysta.web.model.User;
 
@@ -33,4 +35,8 @@ public class RelationService {
 		}
 		return l1;
 	}
+
+    public JsonObject count(Map<String, Object> params){
+        return null;
+    }
 }

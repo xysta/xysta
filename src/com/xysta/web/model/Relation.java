@@ -20,7 +20,7 @@ public class Relation extends Model<Relation> {
 
 	/**  listen list **/
 	public static List<Relation> getlisten1(int listenerid){
-		return dao.find("select * from xysta_relation where  listener_id=? ", listenerid);
+		return dao.find("select * from xysta_relation where  listener_id=?", listenerid);
 
 	}
 

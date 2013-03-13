@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
+import com.jfinal.aop.Before;
 import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
+import com.xysta.web.interceptor.SecureInterceptor;
 import com.xysta.web.model.MiniBlog;
 import com.xysta.web.model.Relation;
 import com.xysta.web.model.User;
@@ -17,6 +20,33 @@ import com.xysta.web.util.ResponseData;
 
 public class RelationController extends Controller {
 	private ResponseData data = null;
+
+
+    /**
+     *  params { [userid] }
+     */
+    public void show(){
+
+    }
+
+    @Before({SecureInterceptor.class})
+    public void save(){
+
+    }
+
+    @Before({SecureInterceptor.class})
+    public void update(){
+
+    }
+
+    @Before({SecureInterceptor.class})
+    public void delete(){
+
+    }
+
+    public void list(){
+
+    }
 
 	@ActionKey("/getCurUserRelaData")
 	public void getCurUserRelaData() {
@@ -57,13 +87,13 @@ public class RelationController extends Controller {
 				data = new ResponseData(true, relation);
 				setSessionAttr("relation", relation);
 			} else {
-				data = new ResponseData(false, "ÒÑÊÕÌý");
+				data = new ResponseData(false, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 			}
 		} else {
 
 			Relation r = Relation.findone(listenerId, sayerId);
 			if (r != null) {
-				data = new ResponseData(false, "ÒÑÊÕÌý");
+				data = new ResponseData(false, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 			} else {
 				Relation rel = new Relation();
 				rel.set("listener_id", listenerId).set("sayer_id", sayerId);
@@ -85,6 +115,14 @@ public class RelationController extends Controller {
 		data = new ResponseData(true, count);
 		renderJson(data);
 	}
+
+    /**
+     * { host: ~, guest: ~}
+     */
+    public void count(){
+////        JsonObject json = new RelationService().count(getParaMap());
+//        renderJson(json);
+    }
 
 	@ActionKey("/getsaycount")
 	public void getsaycount() {
@@ -147,10 +185,10 @@ public class RelationController extends Controller {
 					data = new ResponseData(true, relation);
 					setSessionAttr("relation", relation);
 				} else {
-					data = new ResponseData(false, "ÒÑ¾­È¡ÏûÊÕÌý");
+					data = new ResponseData(false, "ï¿½Ñ¾ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 				}
 			} else {
-				data = new ResponseData(false, "È¡Ïû´íÎó");
+				data = new ResponseData(false, "È¡ï¿½ï¿½ï¿½ï¿½ï¿½");
 			}
 		}
 		renderJson(data);

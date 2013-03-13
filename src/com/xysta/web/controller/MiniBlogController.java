@@ -7,10 +7,12 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.gson.Gson;
+import com.jfinal.aop.Before;
 import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.upload.UploadFile;
+import com.xysta.web.interceptor.SecureInterceptor;
 import com.xysta.web.model.MiniBlog;
 import com.xysta.web.model.User;
 import com.xysta.web.util.PathUtil;
@@ -20,7 +22,13 @@ public class MiniBlogController extends Controller {
 
 	private ResponseData responseData = new ResponseData();
 
+
+    public void show(){
+
+    }
+
 	@ActionKey("/save")
+    @Before({SecureInterceptor.class})
 	public void save() {
 		MiniBlog mb = new MiniBlog();
 		mb.set("content", getPara("content"))
@@ -33,7 +41,22 @@ public class MiniBlogController extends Controller {
 		renderJson(responseData.set(true).set(mb));
 	}
 
-	// ·ÖÒ³²å¼þ
+    @Before({SecureInterceptor.class})
+    public void update(){
+
+    }
+
+    @Before({SecureInterceptor.class})
+    public void delete(){
+
+    }
+
+    public void list() {
+        renderJson(responseData.set(true).set(
+                MiniBlog.dao.find("select * from xysta_blog")));
+    }
+
+	// ï¿½ï¿½Ò³ï¿½ï¿½ï¿½
 	@ActionKey("/paginate")
 	public void paginate() {
 		Page page = MiniBlog.dao.paginate(getParaToInt("pageNumber", 1),
@@ -44,7 +67,7 @@ public class MiniBlogController extends Controller {
 
 	@ActionKey("/uploadAImg")
 	public void uploadAImg() {
-		// Ê¹ÓÃ¾ø¶ÔÂ·¾¶
+		// Ê¹ï¿½Ã¾ï¿½ï¿½Â·ï¿½ï¿½
 		// String filePath =
 		// "E://MyEclipse_Workspaces/MyEclipse/xysta/WebRoot/upload";
 		UploadFile file = getFile();
@@ -81,20 +104,14 @@ public class MiniBlogController extends Controller {
 			File newFile = new File(mHttpUrl + System.currentTimeMillis()
 					+ type);
 			f.renameTo(newFile);
-			// /System.out.println("µÚ"+i+"¸öÎÄ¼þµÄÃû×Ö£º"+ newFile.getName());
+			// /System.out.println("ï¿½ï¿½"+i+"ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½"+ newFile.getName());
 			fileList.add(PathUtil.UPLOAD_IMG + newFile.getName());
 
 		}
 
 		setSessionAttr("imagepath", new Gson().toJson(fileList));
-		renderHtml("Í¼Æ¬ÉÏ´«³É¹¦!");
+		renderHtml("Í¼Æ¬ï¿½Ï´ï¿½ï¿½É¹ï¿½!");
 
-	}
-
-	@ActionKey("/list")
-	public void list() {
-		renderJson(responseData.set(true).set(
-				MiniBlog.dao.find("select * from xysta_blog")));
 	}
 	
 	@ActionKey("/getco")

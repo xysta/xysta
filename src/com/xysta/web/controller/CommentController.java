@@ -2,9 +2,11 @@ package com.xysta.web.controller;
 
 import java.util.List;
 
+import com.jfinal.aop.Before;
 import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 
+import com.xysta.web.interceptor.SecureInterceptor;
 import com.xysta.web.model.Comment;
 import com.xysta.web.model.User;
 import com.xysta.web.util.DateTimeUtil;
@@ -13,7 +15,31 @@ import com.xysta.web.util.ResponseData;
 public class CommentController extends Controller {
 	private ResponseData responseData = new ResponseData();
 
-	@ActionKey("commentSave")
+
+    public void show(){
+
+    }
+
+    @Before({SecureInterceptor.class})
+    public void save(){
+
+    }
+
+    @Before({SecureInterceptor.class})
+    public void update(){
+
+    }
+
+    @Before({SecureInterceptor.class})
+    public void delete(){
+
+    }
+
+    public void list(){
+
+    }
+
+	@ActionKey("commentSave")  //commont/save
 	public void commentSave() {
 		Comment ct = new Comment();
 		// User user = (User)this.getSessionAttr("user");

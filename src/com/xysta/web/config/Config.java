@@ -33,7 +33,7 @@ public class Config extends JFinalConfig {
 		me.add("/user",UserController.class);
 		me.add("/miniblog",MiniBlogController.class);
 		me.add("/review",CommentController.class);
-		me.add("/relation",RelationController.class);
+		me.add("/relation",RelationController.class);  // /relation/show
 	}
 	@Override
 	public void configPlugin(Plugins me) {
