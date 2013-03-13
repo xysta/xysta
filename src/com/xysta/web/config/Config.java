@@ -35,7 +35,6 @@ public class Config extends JFinalConfig {
 		me.add("/review",CommentController.class);
 		me.add("/relation",RelationController.class);
 	}
-
 	@Override
 	public void configPlugin(Plugins me) {
 		C3p0Plugin cp = new C3p0Plugin("jdbc:mysql:///xysta?useUnicode=true&characterEncoding=utf-8", "root", "123456");
