@@ -1,5 +1,7 @@
 .myeclipse
 
+*.class
+
 .idea
 
 xysta.iml
